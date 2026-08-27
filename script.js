@@ -3,6 +3,23 @@
    hash streaming · odometers · hunt simulator · buy calc · explorer feed
    ═══════════════════════════════════════════════════════════ */
 
+/* ── BACKEND INTEGRATION ─────────────────────────────────────
+   Всё ниже работает на симуляции (клиентский JS без бэкенда).
+   Когда поднимете API (api.kxi.kixprojects.online), замените
+   блоки с метками [API:…] на реальные запросы:
+
+     [API:stats]  статы в hero        → GET  /stats
+     [API:hunt]   терминал майнинга   → WS   /ws/probe
+     [API:rates]  курсы в Buy         → GET  /rates
+     [API:order]  кнопка Buy KXI      → POST /order
+     [API:chain]  таблицы эксплорера  → GET  /blocks, /txs
+
+   const API = 'https://api.kxi.kixprojects.online';
+   fetch(API + '/stats').then(r => r.json()).then(s => {
+     height = s.height; oBlock.set(height); // и т.д.
+   });
+   ──────────────────────────────────────────────────────────── */
+
 (() => {
   'use strict';
 
@@ -72,7 +89,7 @@
     termBody.scrollTop = termBody.scrollHeight;
   };
 
-  /* ---------- hero stats ---------- */
+  /* ---------- hero stats [API:stats → GET /stats] ---------- */
   let height = 2481062;
   let net = 184.2;
   let today = 13370;
@@ -122,7 +139,7 @@
     }, randInt(900, 1700));
   })();
 
-  /* ---------- mining ---------- */
+  /* ---------- mining [API:hunt → WebSocket /ws/probe] ---------- */
   const walletInput = $('#walletInput');
   const walletError = $('#walletError');
   const startBtn = $('#startBtn');
@@ -218,7 +235,7 @@
     if (e.key === 'Enter') startBtn.click();
   });
 
-  /* ---------- rates & buy ---------- */
+  /* ---------- rates & buy [API:rates → GET /rates · POST /order] ---------- */
   const FEE = 0.01;
   const CURS = ['RUB', 'USD', 'BTC'];
   const rates = {
@@ -314,7 +331,7 @@
   renderRates(false);
   calc();
 
-  /* ---------- explorer ---------- */
+  /* ---------- explorer [API:chain → GET /blocks, /txs] ---------- */
   const blocksBody = $('#blocksBody');
   const txsBody = $('#txsBody');
   const blocks = [];
