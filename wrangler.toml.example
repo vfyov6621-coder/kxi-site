@@ -1,0 +1,28 @@
+# wrangler.toml.example — для деплоя через CLI (альтернатива дашборду).
+#
+# НЕ обязателен: основной путь деплоя — через дашборд Cloudflare (DEPLOY.md).
+# Если предпочитаете CLI:
+#   1) переименуйте файл в wrangler.toml
+#   2) создайте D1:  wrangler d1 create kxi-chain   (скопируйте database_id ниже)
+#   3) деплой:       wrangler pages deploy . --project-name=kxi-site
+#
+# ⚠️ Если wrangler.toml лежит в репозитории, Cloudflare Pages использует ЕГО
+# настройки сборки вместо дашборда. Для дашборд-деплоя этот файл НЕ нужен.
+
+name = "kxi-site"
+pages_build_output_dir = "."
+compatibility_date = "2025-01-01"
+
+# Привязка D1 (переменная DB в functions/api/[[path]].js):
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "kxi-chain"
+# database_id = "ВСТАВЬТЕ_ID_ИЗ_ВЫВОДА_КОМАНДЫ_d1_create"
+
+# Параметры цепочки (значения по умолчанию можно менять):
+# [vars]
+# TOTAL_SUPPLY_KXI = "1000"
+# TREASURE_KXI = "0.5"
+# DIFFICULTY = "6"
+# ADMIN_KEY задавайте только через секрет или переменные окружения дашборда,
+# не коммитьте его в репозиторий.

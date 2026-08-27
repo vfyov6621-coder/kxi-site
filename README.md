@@ -2,100 +2,75 @@
 
 > FIND THE TOKEN IN THE CHAOS
 
-Brutalist single-page site for **kxi** — a brute-force blockchain where mining
-is a treasure hunt: tokens are scattered across hash space and found by
-brute-force search.
+Brutalist single-page site + backend for **kxi** — a brute-force blockchain
+where mining is a treasure hunt: 1000 KXI are scattered across hash space
+in 0.5-coin treasures and found by brute-force search.
+
+**No fiat in, no fiat out.** Wallets are auto-issued in the browser on
+visit, mining runs locally (Web Workers, pure-JS SHA-256 verified against
+WebCrypto), and transfers live on-chain only (KXI → KXI).
 
 ## Stack
 
-- Pure HTML / CSS / JS — no frameworks, no build step
-- Inter (headlines) + JetBrains Mono (data) via Google Fonts, monospace/sans fallbacks
-- Everything else is local — open `index.html` and go
+- Frontend: pure HTML / CSS / JS — no frameworks, no build step
+- Backend: Cloudflare Pages Functions + D1 SQLite (free tier, same origin)
+- Inter (headlines) + JetBrains Mono (data) via Google Fonts
 
 ## Structure
 
-| File             | Role                                                              |
-| ---------------- | ----------------------------------------------------------------- |
-| `index.html`     | Layout: header / hero / mining terminal / buy / explorer / footer |
-| `style.css`      | Strict black & white system: 1px hairlines, inversions, grain     |
-| `script.js`      | Hash streaming, odometers, buy calculator, live explorer          |
-| `publish.sh`     | Publish: push to private repo + public Pages mirror               |
-| `CNAME`          | GitHub Pages custom domain (kxi.kixprojects.online)               |
-| `deploy/`        | Backend configs: nginx reverse proxy + systemd unit               |
+| File                        | Role                                                       |
+| --------------------------- | ---------------------------------------------------------- |
+| `index.html`                | Layout: header / hero / mining / wallet & transfers / explorer / footer |
+| `style.css`                 | Strict black & white system: 1px hairlines, inversions, grain |
+| `script.js`                 | Auto-wallet, API layer, mining workers, transfers, live explorer |
+| `miner.js`                  | Web Worker: pure-JS SHA-256 + brute-force nonce loop (self-tested vs WebCrypto) |
+| `functions/api/[[path]].js` | Backend: wallets, claims (PoW verification), transfers, blocks, admin |
+| `schema.sql`                | D1 schema reference + reset tool                           |
+| `wrangler.toml.example`     | Optional CLI deploy config                                 |
+| `DEPLOY.md`                 | **Free backend deploy guide (Cloudflare, RU)**             |
+| `publish.sh`                | Publish: push to private repo + public Pages mirror        |
+| `CNAME`                     | Custom domain (kxi.kixprojects.online)                     |
 
-## Sections
+## Protocol
 
-1. **Header** — fixed, logo left, nav (Mining / Buy / Explorer), Connect Wallet right
-2. **Hero** — "FIND THE TOKEN IN THE CHAOS" + one-line live stats bar (odometers)
-3. **Mining terminal** — streaming random hashes, wallet input, blinking SEARCHING_
-4. **Buy** — KXI/RUB · KXI/USD · KXI/BTC rates table, amount input, BUY button
-5. **Explorer** — raw tables of latest blocks & transactions, monospace hashes
-6. **Footer** — logo, year, docs link
+1. Genesis places `TOTAL_SUPPLY_KXI` (default 1000) as treasures of
+   `TREASURE_KXI` (default 0.5) each.
+2. A treasure nonce is any 12-hex-char nonce whose `sha256("salt:nonce")`
+   starts with `DIFFICULTY` (default 6) zero hex chars.
+3. The browser brute-forces nonces locally; on a hit it submits the proof.
+4. The server recomputes the hash, checks the nonce is unclaimed and supply
+   remains, then credits the first hunter. One nonce = one treasure.
+5. Transfers move KXI between on-chain wallets in a single D1 transaction
+   with guarded writes (no double-spend).
 
 ## Run locally
 
+Static only (chain offline banner expected):
+
 ```
 python3 -m http.server 8000
-# → http://localhost:8000
 ```
 
-or just open `index.html` in a browser.
+Full stack (frontend + backend over node:sqlite shim):
+
+```
+node scripts/e2e-server.mjs   # → http://127.0.0.1:8787 (difficulty 5)
+```
+
+Tests:
+
+```
+node scripts/test-miner-sha.mjs   # miner SHA-256 vs node:crypto (40k+ inputs)
+node scripts/test-api.mjs         # full API suite: claims, transfers, races, admin
+```
+
+## Deploy
+
+Frontend: push to `main` (GitHub Pages / Cloudflare Pages rebuilds).
+Backend (free, same domain): follow **DEPLOY.md** — Cloudflare Pages
+project + D1 binding `DB` + env vars. ~10 minutes, zero cost.
 
 ## Design rules
 
 Zero color. Zero gradients. Zero shadows. Zero rounded corners. Zero emoji.
 Typography over graphics. Hover = inversion (white ↔ black).
-
----
-
-## Деплой — kxi.kixprojects.online
-
-Схема из двух репозиториев (на бесплатном GitHub Pages публикуется только из
-публичных репо):
-
-| Репозиторий                | Видимость | Роль                              |
-| -------------------------- | --------- | --------------------------------- |
-| `vfyov6621-coder/kxi`      | private   | исходники — правки делаешь здесь  |
-| `vfyov6621-coder/kxi-site` | public    | live-зеркало — его публикует Pages |
-
-На `kxi-site` включён GitHub Pages (ветка `main`, корень репо) с custom domain
-`kxi.kixprojects.online` (файл `CNAME` в корне). DNS уже настроен со стороны
-домена: `kxi.kixprojects.online` → CNAME → `vfyov6621-coder.github.io`.
-
-Публикация изменений:
-
-```bash
-./publish.sh   # push в приватный kxi, затем в публичный kxi-site → Pages пересоберётся (~1 мин)
-```
-
-Ручной эквивалент:
-
-```bash
-git push origin main
-git push pages main
-```
-
-HTTPS: сертификат Let's Encrypt выдаётся GitHub'ом автоматически после привязки
-домена. Проверить и включить: `kxi-site` → Settings → Pages → **Enforce HTTPS**.
-
-## Бэкенд — куда ставить
-
-GitHub Pages — только статика, поэтому бэкенд (нода kxi + API) живёт на VPS
-в отдельном поддомене:
-
-```
-kxi.kixprojects.online      → GitHub Pages (этот репозиторий, статичный фронтенд)
-api.kxi.kixprojects.online  → VPS: nginx → 127.0.0.1:8080 (нода/API kxi)
-docs.kxi.kixprojects.online → (опционально) будущая документация
-```
-
-1. DNS (панель reg.ru): добавить A-запись `api.kxi` → IP вашего VPS.
-2. Нода/API как systemd-сервис — готовый юнит: `deploy/kxi-api.service`.
-3. nginx reverse proxy с поддержкой WebSocket — готовый конфиг: `deploy/nginx-api.conf`.
-4. SSL: `sudo certbot --nginx -d api.kxi.kixprojects.online`.
-5. CORS: разрешить origin `https://kxi.kixprojects.online`.
-6. Точки интеграции во фронтенде помечены в `script.js` комментариями `[API:…]`
-   (статы, live-поток проб, курсы, ордера, эксплорер).
-
-Serverless не подходит: блокчейн-ноде нужен постоянный процесс и диск —
-берите маленький always-on VPS (1–2 vCPU / 2 GB RAM).

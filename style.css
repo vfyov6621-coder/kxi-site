@@ -96,7 +96,28 @@ body::after {
 .btn-solid:hover, .btn-solid:active { background: var(--bg); color: var(--fg); }
 .btn-sm { padding: 8px 16px; font-size: 10.5px; }
 .btn-block { width: 100%; }
-#connectBtn.connected { border-style: dashed; }
+.btn[disabled] { opacity: 0.35; cursor: not-allowed; }
+.btn[disabled]:hover, .btn[disabled]:active { background: transparent; color: var(--fg); }
+.btn-solid[disabled]:hover, .btn-solid[disabled]:active { background: var(--fg); color: var(--bg); }
+
+/* ── header wallet chip + offline bar ─────────────────────── */
+#walletChip { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.offline-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 7px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.offline-bar a { color: var(--bg); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--bg); }
+.offline-bar a:hover { background: var(--bg); color: var(--fg); }
 
 /* ── header ───────────────────────────────────────────────── */
 .site-header {
@@ -364,7 +385,6 @@ main > .section:last-child { border-bottom: 0; }
 
 /* ── data tables ──────────────────────────────────────────── */
 .table-border { border: 1px solid var(--line); overflow-x: auto; }
-.rates-table { min-width: 420px; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .data-table th {
   text-align: left;
@@ -394,44 +414,50 @@ tr.flash td { animation: rowflash 1.5s steps(4) 1; }
   100% { background: transparent; color: inherit; }
 }
 
-/* ── buy ──────────────────────────────────────────────────── */
-.buy-grid {
+/* ── wallet & transfers ───────────────────────────────────── */
+.wallet-grid {
   display: grid;
-  grid-template-columns: 1.45fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 44px;
   align-items: start;
 }
-.rates-col { min-width: 0; }
-.rates-table .flash { animation: cellflash 0.8s steps(2) 1; }
-@keyframes cellflash { 0% { background: var(--fg); color: var(--bg); } }
-.footnote { margin-top: 12px; font-size: 11px; color: var(--g3); }
-.buy-panel {
+.panel-box {
   border: 1px solid var(--line);
   padding: 26px;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
-.pair-toggle {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: 1px solid var(--fg);
+.sub-head-embedded {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g2);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--g4);
 }
-.pair-btn {
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.12em;
-  padding: 10px 0;
-  background: var(--bg);
-  color: var(--g3);
-  border: none;
-  border-right: 1px solid var(--fg);
-  border-radius: 0;
-  cursor: pointer;
+.addr { word-break: break-all; text-align: right; color: var(--fg); }
+.key-box {
+  border: 1px dashed var(--g4);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-.pair-btn:last-child { border-right: none; }
-.pair-btn:hover { color: var(--fg); }
-.pair-btn.active { background: var(--fg); color: var(--bg); font-weight: 700; }
+.key-row { display: flex; gap: 10px; align-items: flex-start; }
+.key-secret {
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.7;
+  word-break: break-all;
+  color: var(--g2);
+  font-variant-numeric: tabular-nums;
+}
+.key-secret.revealed { color: var(--fg); background: var(--g5); padding: 6px 8px; border: 1px solid var(--g4); }
+.key-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.tx-status { color: var(--g3); }
+.tx-status.sealed { color: var(--fg); font-weight: 700; }
 .calc-rows { display: flex; flex-direction: column; }
 .calc-row {
   display: flex;
@@ -519,7 +545,7 @@ tr.flash td { animation: rowflash 1.5s steps(4) 1; }
   .mining-grid { grid-template-columns: 1fr; }
   .mining-controls { border-left: none; border-top: 1px solid var(--line); }
   .terminal-body { height: 360px; }
-  .buy-grid { grid-template-columns: 1fr; gap: 32px; }
+  .wallet-grid { grid-template-columns: 1fr; gap: 32px; }
   .explorer-grid { grid-template-columns: 1fr; }
   .explorer-block + .explorer-block { border-left: none; border-top: 1px solid var(--line); }
 }
@@ -549,7 +575,11 @@ tr.flash td { animation: rowflash 1.5s steps(4) 1; }
   .terminal-body { height: 300px; font-size: 11.5px; }
   .stat { padding: 12px 14px; }
   .input { font-size: 16px; }
-  .mining-controls, .buy-panel { padding: 20px 16px; }
+  .mining-controls, .panel-box { padding: 20px 16px; }
+  .key-row { flex-direction: column; }
+  .calc-row { flex-direction: column; gap: 4px; }
+  .addr { text-align: left; }
+  #walletChip { max-width: 170px; }
 }
 
 /* ── reduced motion ───────────────────────────────────────── */
@@ -558,5 +588,4 @@ tr.flash td { animation: rowflash 1.5s steps(4) 1; }
   .cursor, .blink, .live-dot { animation: none; }
   body::after { animation: none; }
   tr.flash td { animation: none; }
-  .rates-table .flash { animation: none; }
 }
