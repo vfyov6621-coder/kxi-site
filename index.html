@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kxi — find the token in the chaos</title>
+<meta name="description" content="kxi is a brute-force blockchain. Tokens are scattered across hash space. You find them by search. No pools, no ASICs — just you and the void.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="kxi — find the token in the chaos">
+<meta property="og:description" content="Tokens scattered across 2^256 cells of hash space. Probe. Hit. Get paid.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='black'/%3E%3Ctext x='6' y='44' font-family='monospace' font-size='28' fill='white'%3Ek_%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══ 01 / header ═════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <a class="logo" href="#top" aria-label="kxi home">kxi<span class="cursor">_</span></a>
+    <nav class="main-nav" aria-label="Primary">
+      <a href="#mining">Mining</a>
+      <a href="#buy">Buy</a>
+      <a href="#explorer">Explorer</a>
+    </nav>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" id="connectBtn" type="button">Connect Wallet</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ═══ 02 / hero ══════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="hero-kicker">// proof-of-search · brute-force consensus · no pools · no asics</p>
+      <h1 class="hero-title">
+        <span class="ht-line">Find the token</span>
+        <span class="ht-line ht-outline">in the chaos<span class="cursor">_</span></span>
+      </h1>
+      <p class="hero-sub">kxi scatters tokens across 2<sup>256</sup> cells of hash space. Mining is a pure treasure hunt: pick a nonce, hash it, check the prefix. No pools. No ASICs. No roadmap. Just you, a cursor, and the void.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid" href="#mining">Start mining</a>
+        <a class="btn btn-outline" href="#explorer">Open explorer</a>
+      </div>
+      <div class="stats-bar" aria-label="Live network stats">
+        <div class="stat"><span class="stat-label">Block</span><span class="stat-value" id="statBlock">2,481,062</span></div>
+        <div class="stat"><span class="stat-label">Network</span><span class="stat-value" id="statNet">184.2 PH/s</span></div>
+        <div class="stat"><span class="stat-label">Tokens today</span><span class="stat-value" id="statToday">13,370</span></div>
+        <div class="stat"><span class="stat-label">Hunters online</span><span class="stat-value" id="statHunters">8,204</span></div>
+        <div class="stat"><span class="stat-label">Space scanned</span><span class="stat-value" id="statSpace">0.000000000042%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 03 / mining terminal ═══════════════════════════════ -->
+  <section class="section" id="mining">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-num">[01]</span>
+        <h2>Mining terminal</h2>
+        <span class="section-note">solo · sha-256 · brute force</span>
+      </div>
+      <div class="mining-grid">
+        <div class="terminal">
+          <div class="terminal-bar">
+            <span>kxi-miner v2.4.1 — sha256 probe</span>
+            <span class="terminal-live"><span class="live-dot">●</span> live · pid 4821</span>
+          </div>
+          <div class="terminal-body" id="terminalBody" role="log" aria-live="off">
+            <div class="t-line t-prompt">kxi@void:~$ ./mine --hunt</div>
+            <div class="t-line t-dim">mapping hash space… 1.16e77 cells</div>
+            <div class="t-line t-dim">target prefix……… 0x00000</div>
+            <div class="t-line t-dim">difficulty……… 1 / 1,048,576</div>
+            <div class="t-line t-dim">avg hit………… 1 token / ~4,096 probes</div>
+            <div class="t-line t-dim">awaiting wallet — enter address, press start</div>
+            <div class="t-line t-prompt">kxi@void:~$<span class="cursor">_</span></div>
+          </div>
+        </div>
+        <aside class="mining-controls">
+          <div class="field">
+            <label class="field-label" for="walletInput">Wallet address</label>
+            <input class="input" id="walletInput" type="text" placeholder="0x…40 hex chars" spellcheck="false" autocomplete="off">
+            <p class="field-error" id="walletError">ERR_ invalid address — expected 0x + 40 hex chars</p>
+          </div>
+          <button class="btn btn-solid btn-block" id="startBtn" type="button">Start search</button>
+          <p class="status-line">STATUS: <span class="status-value" id="statusValue">IDLE</span></p>
+          <dl class="mini-stats">
+            <div><dt>Hashrate</dt><dd id="mHashrate">0.0 kH/s</dd></div>
+            <div><dt>Session probes</dt><dd id="mTotal">0</dd></div>
+            <div><dt>Tokens found</dt><dd id="mFound">0.00</dd></div>
+            <div><dt>Uptime</dt><dd id="mUptime">00:00</dd></div>
+          </dl>
+          <p class="note">Difficulty retargets every 512 blocks. Hits credit instantly — zero confirmations, zero custody.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 04 / buy ═══════════════════════════════════════════ -->
+  <section class="section" id="buy">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-num">[02]</span>
+        <h2>Buy KXI</h2>
+        <span class="section-note">one-way gate · rub / usd / btc</span>
+      </div>
+      <div class="buy-grid">
+        <div class="rates-col">
+          <div class="table-border">
+            <table class="data-table rates-table">
+              <thead>
+                <tr><th>Pair</th><th>Rate</th><th>24h</th><th>24h volume</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>KXI / RUB</td><td id="rate-RUB">4.8720</td><td id="chg-RUB">+2.41%</td><td id="vol-RUB">18,402,551</td></tr>
+                <tr><td>KXI / USD</td><td id="rate-USD">0.05214</td><td id="chg-USD">-1.08%</td><td id="vol-USD">196,447</td></tr>
+                <tr><td>KXI / BTC</td><td id="rate-BTC">0.00000061</td><td id="chg-BTC">+0.63%</td><td id="vol-BTC">2.41</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="footnote">* Sell-back unavailable. All purchases are final.</p>
+        </div>
+        <div class="buy-panel">
+          <div class="field">
+            <label class="field-label" for="buyAmount" id="payLabel">You pay — RUB</label>
+            <input class="input" id="buyAmount" type="text" inputmode="decimal" placeholder="0.00" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="pair-toggle" role="group" aria-label="Currency">
+            <button class="pair-btn active" type="button" data-currency="RUB">RUB</button>
+            <button class="pair-btn" type="button" data-currency="USD">USD</button>
+            <button class="pair-btn" type="button" data-currency="BTC">BTC</button>
+          </div>
+          <div class="calc-rows">
+            <div class="calc-row"><span>Rate</span><span id="calcRate">1 KXI = 4.8720 RUB</span></div>
+            <div class="calc-row"><span>Fee (1.0%)</span><span id="calcFee">—</span></div>
+            <div class="calc-row calc-total"><span>You receive</span><span id="calcReceive">0 KXI</span></div>
+          </div>
+          <button class="btn btn-solid btn-block" id="buyBtn" type="button">Buy KXI</button>
+          <div class="order-log" id="orderLog" aria-live="polite">
+            <div class="t-line t-dim">no orders this session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 05 / explorer ══════════════════════════════════════ -->
+  <section class="section" id="explorer">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="section-num">[03]</span>
+        <h2>Explorer</h2>
+        <span class="section-note">raw state · no indexes · no filters</span>
+      </div>
+      <div class="explorer-grid">
+        <div class="explorer-block">
+          <h3 class="sub-head">/ latest blocks</h3>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Height</th><th>Hash</th><th>Txs</th><th>Miner</th><th>Age</th></tr></thead>
+              <tbody id="blocksBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="explorer-block">
+          <h3 class="sub-head">/ latest transactions</h3>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Tx hash</th><th>From</th><th>To</th><th>Amount</th><th>Age</th></tr></thead>
+              <tbody id="txsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══ 06 / footer ══════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="logo">kxi<span class="cursor">_</span></span>
+    <span class="footer-mid">© <span id="year">2026</span> — all probes final</span>
+    <a class="footer-link" href="https://github.com/" target="_blank" rel="noopener">Docs ↗</a>
+  </div>
+</footer>
+
+<noscript><div class="noscript-bar">JavaScript off — live data frozen, the void keeps moving without you.</div></noscript>
+
+<script src="script.js"></script>
+</body>
+</html>
