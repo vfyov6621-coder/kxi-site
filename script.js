@@ -71,7 +71,12 @@
   }
 
   /* ---------- API layer ---------- */
-  const API = '/api';
+  /* Backend base. When this site is served by the chain backend itself
+     (Cloudflare Pages, kxi-chain.pages.dev) the API is same-origin;
+     from GitHub Pages (kxi.kixprojects.online) or localhost we talk to
+     the public backend URL — the backend answers CORS: *. */
+  const BACKEND = 'https://kxi-chain.pages.dev';
+  const API = location.origin === BACKEND ? '/api' : BACKEND + '/api';
   let chainOnline = null; // null = booting, true, false
   let state = null;       // last /api/state payload
 
