@@ -9,3 +9,5 @@ dist/
 wrangler.toml
 wrangler.worker.toml
 .wrangler/
+__pycache__/
+*.pyc

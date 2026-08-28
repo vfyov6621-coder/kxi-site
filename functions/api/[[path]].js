@@ -100,7 +100,6 @@ function ensureSchema(db) {
 }
 
 /* ── genesis / config ─────────────────────────────────────── */
-let cfgCache = null;
 
 async function readConfig(db) {
   const rows = (await db.prepare(`SELECT k, v FROM config`).all()).results || [];
@@ -109,34 +108,37 @@ async function readConfig(db) {
   return cfg;
 }
 
+/* config is re-read from D1 on every request (no isolate cache) so that
+   admin difficulty/salt retargets apply everywhere within one poll cycle */
 async function ensureGenesis(db, env) {
-  if (cfgCache) return cfgCache;
   let existing = await readConfig(db);
   const defaults = {
     total_supply_milli: String(Math.round(parseFloat(env.TOTAL_SUPPLY_KXI || '1000') * 1000) || 1000000),
     treasure_milli: String(Math.round(parseFloat(env.TREASURE_KXI || '0.5') * 1000) || 500),
-    difficulty: String(Math.max(1, Math.min(8, parseInt(env.DIFFICULTY || '6', 10) || 6))),
+    difficulty: String(Math.max(1, Math.min(8, parseInt(env.DIFFICULTY || '7', 10) || 7))),
     salt: env.SALT && /^[0-9a-f]{16,64}$/.test(env.SALT) ? env.SALT : hex(crypto.getRandomValues(new Uint8Array(16)))
   };
   const missing = Object.keys(defaults)
     .filter((k) => !existing[k])
     .map((k) => db.prepare(`INSERT OR IGNORE INTO config (k, v) VALUES (?, ?)`).bind(k, defaults[k]));
-  if (missing.length) await db.batch(missing);
-  await db
-    .prepare(
-      `INSERT OR IGNORE INTO blocks (height, prev_hash, tx_root, hash, ts, tx_count)
-       VALUES (0, 'GENESIS', 'GENESIS', ?, ?, 0)`
-    )
-    .bind(await sha256hex('kxi:genesis'), now())
-    .run();
-  if (missing.length) existing = await readConfig(db);
-  cfgCache = {
+  if (missing.length) {
+    missing.push(
+      db
+        .prepare(
+          `INSERT OR IGNORE INTO blocks (height, prev_hash, tx_root, hash, ts, tx_count)
+           VALUES (0, 'GENESIS', 'GENESIS', ?, ?, 0)`
+        )
+        .bind(await sha256hex('kxi:genesis'), now())
+    );
+    await db.batch(missing);
+    existing = await readConfig(db);
+  }
+  return {
     salt: existing.salt,
     difficulty: parseInt(existing.difficulty, 10),
     treasureMilli: parseInt(existing.treasure_milli, 10),
     totalSupplyMilli: parseInt(existing.total_supply_milli, 10)
   };
-  return cfgCache;
 }
 
 /* ── auth ─────────────────────────────────────────────────── */
@@ -514,7 +516,6 @@ async function handleAdmin(request, env, db) {
   if (body.action === 'rotate-salt') {
     const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
     await db.prepare(`INSERT OR REPLACE INTO config (k, v) VALUES ('salt', ?)`).bind(salt).run();
-    cfgCache = null;
     return json({ ok: true, salt });
   }
 
@@ -545,7 +546,6 @@ async function handleAdmin(request, env, db) {
       return json({ ok: false, error: 'nothing to update — pass treasureKxi / difficulty / totalSupplyKxi' }, 400);
     updates.push(db.prepare(`INSERT OR REPLACE INTO config (k, v) VALUES ('updated_at', ?)`).bind(String(t)));
     await db.batch(updates);
-    cfgCache = null;
     return json({
       ok: true,
       config: {

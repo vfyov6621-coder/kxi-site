@@ -100,6 +100,35 @@
           <p class="note">Every hash above is computed by your own CPU. The server never mines — it only verifies proofs and credits the first hunter to land a valid nonce. Difficulty retargets are admin-signed.</p>
         </aside>
       </div>
+
+      <div class="wallet-grid console-miner">
+        <div class="panel-box">
+          <h3 class="sub-head-embedded">/ console miner — cpu &amp; gpu</h3>
+          <div class="code-block" role="img" aria-label="Console miner quick start commands">
+            <span class="code-cm"># cpu — needs only python, nothing else</span>
+            <span>curl -O https://kxi.kixprojects.online/kxi-miner.py</span>
+            <span>python kxi-miner.py</span>
+            <span class="code-cm"># gpu — brute force on your graphics card</span>
+            <span>pip install pyopencl numpy</span>
+            <span>python kxi-miner.py --gpu</span>
+            <span class="code-cm"># mine into your browser wallet</span>
+            <span>python kxi-miner.py --key &lt;your 64-hex secret&gt;</span>
+          </div>
+          <p class="note">One file, opencl kernel inside. SHA-256 is computed by your hardware, the chain only verifies proofs. Run <span class="mono">--benchmark</span> to measure your hashrate, <span class="mono">--info</span> for chain state, <span class="mono">--send 0.5 --to 0x…</span> to transfer right from the terminal.</p>
+        </div>
+        <div class="panel-box">
+          <h3 class="sub-head-embedded">/ how it works</h3>
+          <div class="calc-rows">
+            <div class="calc-row"><span>Wallet</span><span>auto-minted, kxi-wallet.json</span></div>
+            <div class="calc-row"><span>CPU mode</span><span>multiprocess sha-256</span></div>
+            <div class="calc-row"><span>GPU mode</span><span>opencl kernel, all vendors</span></div>
+            <div class="calc-row"><span>Proof check</span><span>server recomputes every hash</span></div>
+            <div class="calc-row"><span>Retargets</span><span>picked up mid-hunt, live</span></div>
+            <div class="calc-row"><span>Fees</span><span>none — first proof wins</span></div>
+          </div>
+          <p class="note">The same key works everywhere: mint a wallet on the site and mine from the console into it, or mine on a spare box and import the key into your browser later. The server never mines and never holds your key.</p>
+        </div>
+      </div>
     </div>
   </section>
 

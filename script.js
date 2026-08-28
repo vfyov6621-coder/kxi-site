@@ -71,21 +71,40 @@
   }
 
   /* ---------- API layer ---------- */
-  /* Backend base. When this site is served by the chain backend itself
-     (Cloudflare Pages, kxi-chain.pages.dev) the API is same-origin;
-     from GitHub Pages (kxi.kixprojects.online) or localhost we talk to
-     the public backend URL — the backend answers CORS: *. */
+  /* Backend base, resolved at boot:
+     1. same-origin /api (frontend+backend deployed together, local dev server)
+     2. the public chain backend URL (GitHub Pages case) — CORS * there */
   const BACKEND = 'https://kxi-chain.pages.dev';
-  const API = location.origin === BACKEND ? '/api' : BACKEND + '/api';
+  let API = null;
+
+  async function resolveApi() {
+    if (API) return API;
+    try {
+      const probe = fetch(location.origin + '/api/state', { method: 'GET' });
+      const timed = await Promise.race([
+        probe.then((r) => (r.ok ? r.json() : null)),
+        new Promise((res) => setTimeout(() => res(null), 4000))
+      ]);
+      if (timed && timed.ok) {
+        API = '/api';
+        return API;
+      }
+    } catch (e) {
+      /* same-origin api absent — use the public backend */
+    }
+    API = BACKEND + '/api';
+    return API;
+  }
   let chainOnline = null; // null = booting, true, false
   let state = null;       // last /api/state payload
 
   async function api(path, opts = {}) {
+    const base = await resolveApi();
     const headers = { 'content-type': 'application/json' };
     if (wallet.authKey) headers['x-kxi-key'] = wallet.authKey;
     let res;
     try {
-      res = await fetch(API + path, {
+      res = await fetch(base + path, {
         method: opts.method || 'GET',
         headers,
         body: opts.body ? JSON.stringify(opts.body) : undefined
